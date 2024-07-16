@@ -15,18 +15,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(ThirdParty.cmake)
 
 
-add_executable(
-    map_reader
-    main.cpp
-    ${imgui_source_files}
-)
+# add_executable(
 
-target_link_libraries( map_reader
-    Vulkan::Vulkan
-    glfw
-    imgui
-    ${OpenCV_LIBS}
- )
+#     main.cpp
+#     ${imgui_source_files}
+# )
+
+# target_link_libraries( map_reader
+#     Vulkan::Vulkan
+#     glfw
+#     imgui
+#     ${OpenCV_LIBS}
+#  )
+
+add_subdirectory(src)
+
 
 file(
     COPY
