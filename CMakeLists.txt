@@ -31,9 +31,9 @@ include(ThirdParty.cmake)
 add_subdirectory(src)
 
 
-file(
-    COPY
-        ${opencv_dll_location}/opencv_world490d.dll
-    DESTINATION
-        ${CMAKE_CURRENT_BINARY_DIR}/Debug
-)
+# file(
+#     COPY
+#         ${opencv_dll_location}/opencv_world490d.dll
+#     DESTINATION
+#         ${CMAKE_CURRENT_BINARY_DIR}/Debug
+# )

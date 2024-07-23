@@ -13,8 +13,9 @@ namespace{
     void glfw_input_callback(GLFWwindow * window, int key, int scancode, int action, int mods){
 
         const char* key_name = glfwGetKeyName(GLFW_KEY_UNKNOWN, scancode);
-
-        std::cerr << std::format("Key Event '{}' : {}", key_name, action) << std::endl;
+        if(key_name){
+            std::cerr << std::format("Key Event '{}' : {}", key_name, action) << std::endl;
+        }
 
         if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS){
             // https://www.glfw.org/docs/3.3/window_guide.html#window_close

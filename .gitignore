@@ -1,6 +1,6 @@
 # project specific
 .vscode/
-_build/
+_build/*
 _install/
 
 # Prerequisites
