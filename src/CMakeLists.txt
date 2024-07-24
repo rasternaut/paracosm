@@ -4,6 +4,8 @@ add_executable(
 
     engine.cpp
     engine.h
+    rendering/vulkan-renderer.h
+    rendering/vulkan-renderer.cpp
 
     ${imgui_source_files}
 )

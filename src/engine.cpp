@@ -40,6 +40,8 @@ Engine::Engine(){
     app_window = glfwCreateWindow(width, height, "Paracosm Demo", nullptr, nullptr);
     glfwSetKeyCallback(app_window, glfw_input_callback);
 
+    mRenderingEngine = new VulkanRenderer();
+
 }
 
 Engine::~Engine(){
