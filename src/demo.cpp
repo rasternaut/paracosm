@@ -8,8 +8,9 @@
 
 
 int main(int argc, char** charv){
-
-    paracosm::Engine engine;
-    engine.Run();
-
+    {
+        paracosm::Engine engine;
+        engine.Run();
+    }
+    return 0;
 }

@@ -40,11 +40,17 @@ Engine::Engine(){
     app_window = glfwCreateWindow(width, height, "Paracosm Demo", nullptr, nullptr);
     glfwSetKeyCallback(app_window, glfw_input_callback);
 
-    mRenderingEngine = new VulkanRenderer();
+    int h, w;
+    glfwGetFramebufferSize(app_window, &w, &h);
+
+
+    mRenderingEngine = new VulkanRenderer(app_window, h, w);
 
 }
 
 Engine::~Engine(){
+    std::cout << "Shutting down Paracosm Core Engine" << std::endl;
+    delete mRenderingEngine;
     glfwDestroyWindow(app_window);
     glfwTerminate();
 
@@ -55,6 +61,8 @@ void Engine::Run(){
     while(!glfwWindowShouldClose(app_window)){
         glfwPollEvents();
     }
+
+    return;
 
 }
 
