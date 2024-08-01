@@ -77,56 +77,98 @@ void VulkanRenderer::DestroyInstance()
     mInstance.destroy();
 }
 
+struct QueueFamilyData{
+    std::optional<uint32_t> GraphicsQueue;
+    std::optional<uint32_t> ComputeQueue;
+    std::optional<uint32_t> PresentQueue;
+
+    bool isValid(){
+        return GraphicsQueue.has_value() ; // && ComputeQueue.has_value() && PresentQueue.has_value()
+    }
+};
+
+QueueFamilyData determineQueuesForDevice(vk::PhysicalDevice device){
+    QueueFamilyData data;
+    std::vector<vk::QueueFamilyProperties> queueProperties = device.getQueueFamilyProperties();
+
+    for(int ii = 0; ii < queueProperties.size(); ii++){
+        vk::QueueFamilyProperties const * properties = &queueProperties[ii];
+        // std::cout <<
+        //     properties->queueCount <<
+        //     " " <<
+        //     to_string(properties->queueFlags) <<
+        //     std::endl;
+
+        if( !data.GraphicsQueue.has_value() &&  properties->queueFlags & vk::QueueFlagBits::eGraphics){
+            data.GraphicsQueue = ii;
+        }
+    }
+
+    return data;
+}
+
+vk::PhysicalDevice selectBestDevice(std::vector<vk::PhysicalDevice> deviceCandidates){
+
+    vk::PhysicalDevice bestCandidate;
+    uint32_t bestScore;
+
+    for (auto && candidate : deviceCandidates)
+    {
+        uint32_t score = 0;
+
+        vk::PhysicalDeviceProperties prop = candidate.getProperties();
+        // std::cout << prop.properties.
+        std::cout << std::format("{}", prop.deviceName.data()) << std::endl;
+        std::cout << std::format("\t {}: {}", "API Version", prop.apiVersion) << std::endl;
+        std::cout << std::format("\t {}: {}", "Type", vk::to_string(prop.deviceType)) << std::endl;
+        std::cout << std::format("\t {}: {}", "Driver Version", prop.driverVersion) << std::endl;
+
+        QueueFamilyData queueData = determineQueuesForDevice(candidate);
+
+        if(!queueData.isValid()){
+            continue;
+        }
+
+        switch (prop.deviceType)
+        {
+            case vk::PhysicalDeviceType::eDiscreteGpu :
+                score = 100;
+                break;
+            case vk::PhysicalDeviceType::eIntegratedGpu :
+                score = 10;
+                break;
+            case vk::PhysicalDeviceType::eCpu :
+                score = 5;
+                break;
+            default:
+                score = 1;
+                break;
+        }
+
+        if(!bestCandidate || score > bestScore){
+            bestCandidate = candidate;
+            bestScore = score;
+        }
+    }
+    return bestCandidate;
+}
+
 void VulkanRenderer::SetupDevice()
 {
     std::vector<vk::PhysicalDevice> physicalDevices = mInstance.enumeratePhysicalDevices();
 
-    for( vk::PhysicalDevice const & device : physicalDevices){
-        vk::PhysicalDeviceProperties2 prop = device.getProperties2();
-        // std::cout << prop.properties.
-        std::cout << std::format("{}", prop.properties.deviceName.data()) << std::endl;
-        std::cout << std::format("\t {}: {}", "API Version", prop.properties.apiVersion) << std::endl;
-        std::cout << std::format("\t {}: {}", "Type", vk::to_string(prop.properties.deviceType)) << std::endl;
-        std::cout << std::format("\t {}: {}", "Driver Version", prop.properties.driverVersion) << std::endl;
-        // std::cout << std::format("\t {}: {}", "Limits", vk::to_string(prop.properties.limits)) << std::endl;
-
-        // do the same for features
-        vk::PhysicalDeviceFeatures2 feat = device.getFeatures2();
-        // TODO go through list of features and determine what we want to log/look at for selection
-
-        // Temp hack to pick a discrete card
-        if(prop.properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu ){
-            mPhysicalDevice = device;
-        }
-    }
-
+    mPhysicalDevice = selectBestDevice(physicalDevices);
 
     if(!mPhysicalDevice){
         throw std::runtime_error("No physical device selected");
     }
 
-    std::vector<vk::QueueFamilyProperties2> QueueFamilyProperties = mPhysicalDevice.getQueueFamilyProperties2();
+    QueueFamilyData data = determineQueuesForDevice(mPhysicalDevice);
 
-    uint32_t graphicsQueueIndex = 0;
     float graphicsQueuePriority = 1.0f;
 
-    // for(vk::QueueFamilyProperties2 const & prop: QueueFamilyProperties){
-    for(int ii = 0; ii < QueueFamilyProperties.size(); ii++){
-        vk::QueueFamilyProperties const * properties = &QueueFamilyProperties[ii].queueFamilyProperties;
-        std::cout <<
-            properties->queueCount <<
-            " " <<
-            to_string(properties->queueFlags) <<
-            std::endl;
-
-        if(properties->queueFlags & vk::QueueFlagBits::eGraphics){
-            graphicsQueueIndex = ii;
-            break;
-        }
-    }
-
     vk::DeviceQueueCreateInfo graphicsQueueCreateInfo{
-        .queueFamilyIndex = graphicsQueueIndex,
+        .queueFamilyIndex = data.GraphicsQueue.value(),
         .queueCount = 1,
         .pQueuePriorities = &graphicsQueuePriority
     };

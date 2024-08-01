@@ -1,12 +1,20 @@
 include(FetchContent)
 set(FETCHCONTENT_QUIET TRUE)
 
-# fetch and set up 3rd party utils
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # linux can fetch Vulkan SDK as a archive
+    FetchContent_Declare(
+        vulkan
+        URL https://sdk.lunarg.com/sdk/download/1.3.290.0/linux/vulkansdk-linux-x86_64-1.3.290.0.tar.xz
+        URL_HASH SHA256=440906a95e7d42da0eaf5c3ae41471baf4aa7086df9d9b93795b0f908239a76a
+    )
+    FetchContent_MakeAvailable(vulkan)
+    set( ENV{VULKAN_SDK} ${vulkan_SOURCE_DIR}/x86_64)
+    set( ENV{PATH} $ENV{VULKAN_SDK}/lib:$ENV{PATH})
+    set( ENV{LD_LIBRARY_PATH} $ENV{VULKAN_SDK}/libs:$ENV{LD_LIBRARY_PATH})
+    set( ENV{VK_ADD_LAYER_PATH}  $ENV{VULKAN_SDK}/share/vulkan/explicit_layer.d)
+endif()
 
-# FetchContent_Declare(
-#     glfw
-#     URL         https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.bin.WIN64.zip
-# )
 
 FetchContent_Declare (
     glfw
@@ -28,11 +36,6 @@ set(GLFW_INSTALL OFF CACHE INTERNAL "Generate installation target")
 set(FETCHCONTENT_QUIET FALSE)
 FetchContent_MakeAvailable(imgui glfw)
 
-# find_package(OpenCV REQUIRED PATHS ${open_cv_SOURCE_DIR}/build/)
-# set(opencv_dll_location  ${open_cv_SOURCE_DIR}/build/x64/vc16/bin/)
-
-
-# TODO: rest of MSVC versions as supported by GLFW
 
 if(MSVC_VERSION GREATER_EQUAL 1900)
 set(GLFW_BUILD_VERSION "lib-vc2022")
@@ -40,14 +43,6 @@ endif()
 
 set(GLFW_LIB_DIR "${glfw_SOURCE_DIR}/${GLFW_BUILD_VERSION}")
 set(GLFW_HEADERS_DIR "${glfw_SOURCE_DIR}/include/")
-
-# add_library(glfw STATIC IMPORTED)
-# set_target_properties(glfw PROPERTIES
-# IMPORTED_LOCATION "${GLFW_LIB_DIR}/glfw3_mt.lib"
-# IMPORTED_LOCATION_DEBUG  "${GLFW_LIB_DIR}/glfw3_mt.lib"
-# INTERFACE_INCLUDE_DIRECTORIES "${GLFW_HEADERS_DIR}"
-# )
-
 
 add_library(imgui STATIC
 
@@ -70,6 +65,8 @@ add_library(imgui STATIC
 "${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp"
 )
 
+find_package(Vulkan REQUIRED)
+
 target_include_directories(imgui
 PUBLIC
 "${imgui_SOURCE_DIR}/"
@@ -83,7 +80,6 @@ glfw
 
 
 
-find_package(Vulkan REQUIRED)
 
 
 
