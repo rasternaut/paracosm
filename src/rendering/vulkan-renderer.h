@@ -9,6 +9,9 @@ public:
     VulkanRenderer(GLFWwindow * AppWindow, uint32_t height, uint32_t width);
     ~VulkanRenderer();
 
+    // Temporary draw method, will eventually be replaced when we have the engine properly running
+    void DrawFrame();
+
 private:
     uint32_t height;
     uint32_t width;
@@ -25,13 +28,19 @@ private:
     void DestroySurface();
 
     void SetupSwapchain();
+    void SetupSwapchainImages();
+    // void DestroySwapchainImages();
     void DestroySwapchain();
 
     vk::Instance mInstance;
     vk::PhysicalDevice mPhysicalDevice;
     vk::Device mDevice;
     vk::Queue mGraphicsQueue;
+    vk::CommandPool mCommandPool;
+    std::vector<vk::CommandBuffer> mCommandBuffers;
 
     vk::SurfaceKHR mSurface;
     vk::SwapchainKHR mSwapchain;
+    std::vector<vk::Image> mSwapchainImages;
+
 };

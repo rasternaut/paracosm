@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 #include <iostream>
 
@@ -16,8 +17,28 @@ VulkanRenderer::VulkanRenderer(GLFWwindow * AppWindow, uint32_t height, uint32_t
     SetupGraphicsQueue();
     SetupSurface(AppWindow);
     SetupSwapchain();
-}
+    SetupSwapchainImages();
 
+    vk::CommandPoolCreateInfo commandPoolCreateInfo
+    {
+        .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        .queueFamilyIndex = 0,
+    };
+
+    mCommandPool = mDevice.createCommandPool( commandPoolCreateInfo );
+
+    vk::CommandBufferAllocateInfo cmdBufferAllocateInfo
+    {
+        .commandPool = mCommandPool,
+        .level = vk::CommandBufferLevel::ePrimary,
+        .commandBufferCount = 1,
+    };
+
+    mCommandBuffers = mDevice.allocateCommandBuffers(cmdBufferAllocateInfo);
+
+
+
+}
 VulkanRenderer::~VulkanRenderer()
 {
     std::cout << "shutdown time" << std::endl;
@@ -25,6 +46,15 @@ VulkanRenderer::~VulkanRenderer()
     DestroySurface();
     DestroyDevice();
     DestroyInstance();
+}
+
+
+void VulkanRenderer::DrawFrame(){
+
+    // get command buffer
+    vk::commandBuffer = mCommandBuffers[0];
+    //recordd commands
+    // submit to vkqueue
 }
 
 void VulkanRenderer::PickBestGraphicsDevice()
@@ -41,6 +71,8 @@ void VulkanRenderer::SetupInstance()
     for(int ii = 0; ii < extensionCount; ii++){
         enabledExtensions.push_back(glfwExtensions[ii]);
     }
+
+    std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
 
 
     std::vector<const char*> enabledLayers;
@@ -118,8 +150,14 @@ vk::PhysicalDevice selectBestDevice(std::vector<vk::PhysicalDevice> deviceCandid
 
         vk::PhysicalDeviceProperties prop = candidate.getProperties();
         // std::cout << prop.properties.
+        std::stringstream versionString;
+        versionString << VK_API_VERSION_MAJOR(prop.apiVersion) << ".";
+        versionString << VK_API_VERSION_MINOR(prop.apiVersion) << ".";
+        versionString << VK_API_VERSION_PATCH(prop.apiVersion);
+
+
         std::cout << std::format("{}", prop.deviceName.data()) << std::endl;
-        std::cout << std::format("\t {}: {}", "API Version", prop.apiVersion) << std::endl;
+        std::cout << std::format("\t {}: {}", "API Version", versionString.str()) << std::endl;
         std::cout << std::format("\t {}: {}", "Type", vk::to_string(prop.deviceType)) << std::endl;
         std::cout << std::format("\t {}: {}", "Driver Version", prop.driverVersion) << std::endl;
 
@@ -259,6 +297,16 @@ void VulkanRenderer::SetupSwapchain()
     mSwapchain = mDevice.createSwapchainKHR(swapchainCreateInfo);
 
 }
+
+void VulkanRenderer::SetupSwapchainImages()
+{
+    mSwapchainImages = mDevice.getSwapchainImagesKHR(mSwapchain);
+    if(mSwapchainImages.size() < 1)
+    {
+        throw std::runtime_error("No swapchain images");
+    }
+}
+
 
 void VulkanRenderer::DestroySwapchain()
 {

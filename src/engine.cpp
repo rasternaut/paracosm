@@ -60,6 +60,7 @@ void Engine::Run(){
 
     while(!glfwWindowShouldClose(app_window)){
         glfwPollEvents();
+        mRenderingEngine->DrawFrame();
     }
 
     return;
